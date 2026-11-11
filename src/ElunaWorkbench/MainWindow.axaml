@@ -1,0 +1,173 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:local="clr-namespace:ElunaWorkbench"
+        x:Class="ElunaWorkbench.MainWindow"
+        Title="Eluna Workbench"
+        Width="1400" Height="880"
+        MinWidth="800" MinHeight="500"
+        Background="#1E1E1E">
+  <DockPanel>
+    <Menu DockPanel.Dock="Top" Background="#2D2D30">
+      <MenuItem Header="_Datei">
+        <MenuItem Header="Neues _Projekt…" Click="OnNewProject" InputGesture="Ctrl+Shift+N" />
+        <MenuItem Header="Projekt ö_ffnen…" Click="OnOpenProject" InputGesture="Ctrl+Shift+O" />
+        <MenuItem Header="_Ordner als Projekt öffnen…" Click="OnOpenFolder" />
+        <MenuItem x:Name="RecentMenu" Header="_Zuletzt geöffnet" />
+        <Separator />
+        <MenuItem Header="_Neue Datei…" Click="OnNewFile" InputGesture="Ctrl+N" />
+        <MenuItem Header="Datei ö_ffnen…" Click="OnOpenFile" InputGesture="Ctrl+O" />
+        <MenuItem Header="_Speichern" Click="OnSave" InputGesture="Ctrl+S" />
+        <MenuItem Header="Speichern _unter…" Click="OnSaveAs" />
+        <MenuItem Header="_Alle speichern" Click="OnSaveAll" InputGesture="Ctrl+Shift+S" />
+        <MenuItem Header="Datei s_chließen" Click="OnCloseTab" InputGesture="Ctrl+W" />
+        <MenuItem Header="Projekt schließen" Click="OnCloseProject" />
+        <Separator />
+        <MenuItem Header="_Beenden" Click="OnExit" InputGesture="Alt+F4" />
+      </MenuItem>
+      <MenuItem Header="_Bearbeiten">
+        <MenuItem Header="_Rückgängig" Click="OnUndo" InputGesture="Ctrl+Z" />
+        <MenuItem Header="_Wiederholen" Click="OnRedo" InputGesture="Ctrl+Y" />
+        <Separator />
+        <MenuItem Header="_Suchen" Click="OnFind" InputGesture="Ctrl+F" />
+        <MenuItem Header="_Ersetzen" Click="OnReplace" InputGesture="Ctrl+H" />
+        <MenuItem Header="In _Projekt suchen…" Click="OnFindInProject" InputGesture="Ctrl+Shift+F12" />
+        <MenuItem Header="_Gehe zu Zeile…" Click="OnGoToLine" InputGesture="Ctrl+G" />
+        <MenuItem Header="Gehe zu _Definition" Click="OnGoToDefinition" InputGesture="F12" />
+        <Separator />
+        <MenuItem Header="_Autovervollständigung" Click="OnComplete" InputGesture="Ctrl+Space" />
+        <MenuItem Header="_Parameter-Info" Click="OnParameterInfo" InputGesture="Ctrl+Shift+Space" />
+        <MenuItem Header="_Kommentar umschalten" Click="OnToggleComment" InputGesture="Ctrl+K" />
+        <MenuItem Header="Dokument _formatieren" Click="OnFormat" InputGesture="Ctrl+Shift+F" />
+      </MenuItem>
+      <MenuItem Header="_Korrektur">
+        <MenuItem Header="_Schnellkorrektur an Cursorposition" Click="OnQuickFix" InputGesture="Ctrl+OemPeriod" />
+        <MenuItem Header="Alle _sicheren Korrekturen anwenden" Click="OnFixAll" />
+        <MenuItem Header="Zum _nächsten Problem" Click="OnNextProblem" InputGesture="F8" />
+        <MenuItem Header="Zum _vorherigen Problem" Click="OnPreviousProblem" InputGesture="Shift+F8" />
+      </MenuItem>
+      <MenuItem Header="_Projekt">
+        <MenuItem Header="_Einstellungen…" Click="OnProjectSettings" />
+        <MenuItem Header="Projekt _neu analysieren" Click="OnReanalyze" InputGesture="Ctrl+Shift+B" />
+        <MenuItem Header="_Deploy nach lua_scripts" Click="OnDeploy" InputGesture="F6" />
+      </MenuItem>
+      <MenuItem Header="_Ansicht">
+        <MenuItem x:Name="ToggleExplorerItem" Header="Projekt-_Explorer" Click="OnToggleExplorer" />
+        <MenuItem x:Name="ToggleApiItem" Header="_API-Browser" Click="OnToggleApi" />
+        <MenuItem x:Name="ToggleProblemsItem" Header="_Fehlerliste" Click="OnToggleProblems" />
+        <Separator />
+        <MenuItem Header="Schrift _vergrößern" Click="OnZoomIn" InputGesture="Ctrl+OemPlus" />
+        <MenuItem Header="Schrift _verkleinern" Click="OnZoomOut" InputGesture="Ctrl+OemMinus" />
+      </MenuItem>
+      <MenuItem Header="_Hilfe">
+        <MenuItem Header="_Tastenkürzel" Click="OnShortcuts" />
+        <MenuItem Header="Ü_ber Eluna Workbench" Click="OnAbout" />
+      </MenuItem>
+    </Menu>
+
+    <!-- Status bar -->
+    <Border DockPanel.Dock="Bottom" Background="#007ACC" Height="24">
+      <Grid ColumnDefinitions="*,Auto,Auto,Auto,Auto" Margin="8,0">
+        <TextBlock x:Name="StatusText" Grid.Column="0" VerticalAlignment="Center" Foreground="White" FontSize="12" Text="Bereit" />
+        <TextBlock x:Name="StatusProblems" Grid.Column="1" VerticalAlignment="Center" Foreground="White" FontSize="12" Margin="16,0" />
+        <TextBlock x:Name="StatusCore" Grid.Column="2" VerticalAlignment="Center" Foreground="White" FontSize="12" Margin="16,0" />
+        <TextBlock x:Name="StatusLua" Grid.Column="3" VerticalAlignment="Center" Foreground="White" FontSize="12" Margin="16,0" />
+        <TextBlock x:Name="StatusPosition" Grid.Column="4" VerticalAlignment="Center" Foreground="White" FontSize="12" Margin="16,0,0,0" />
+      </Grid>
+    </Border>
+
+    <Grid x:Name="RootGrid" ColumnDefinitions="260,4,*,4,320" RowDefinitions="*,4,190">
+      <!-- Project explorer + outline -->
+      <Grid x:Name="ExplorerPanel" Grid.Column="0" Grid.Row="0" Grid.RowSpan="3" RowDefinitions="Auto,*,4,Auto,180" Background="#252526">
+        <DockPanel Grid.Row="0">
+          <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" Margin="0,0,4,0">
+            <Button Content="＋" ToolTip.Tip="Neue Datei" Click="OnNewFile" Padding="6,0" Background="Transparent" />
+            <Button Content="📁" ToolTip.Tip="Neuer Ordner" Click="OnNewFolder" Padding="6,0" Background="Transparent" />
+            <Button Content="⟳" ToolTip.Tip="Aktualisieren" Click="OnRefreshExplorer" Padding="6,0" Background="Transparent" />
+          </StackPanel>
+          <TextBlock x:Name="ExplorerHeader" Classes="panelHeader" Text="PROJEKT" />
+        </DockPanel>
+        <TreeView x:Name="ProjectTree" Grid.Row="1" Background="#252526" DoubleTapped="OnProjectTreeDoubleTapped" SelectionMode="Single">
+          <TreeView.ItemTemplate>
+            <TreeDataTemplate x:DataType="local:ProjectNode" ItemsSource="{Binding Children}">
+              <StackPanel Orientation="Horizontal" Spacing="6">
+                <TextBlock Text="{Binding Icon}" />
+                <TextBlock Text="{Binding Name}" />
+              </StackPanel>
+            </TreeDataTemplate>
+          </TreeView.ItemTemplate>
+          <TreeView.ContextMenu>
+            <ContextMenu>
+              <MenuItem Header="Öffnen" Click="OnTreeOpen" />
+              <MenuItem Header="Neue Datei…" Click="OnNewFile" />
+              <MenuItem Header="Neuer Ordner…" Click="OnNewFolder" />
+              <Separator />
+              <MenuItem Header="Umbenennen…" Click="OnTreeRename" />
+              <MenuItem Header="Löschen" Click="OnTreeDelete" />
+              <Separator />
+              <MenuItem Header="Aktualisieren" Click="OnRefreshExplorer" />
+            </ContextMenu>
+          </TreeView.ContextMenu>
+        </TreeView>
+        <GridSplitter Grid.Row="2" Background="#333337" ResizeDirection="Rows" />
+        <TextBlock Grid.Row="3" Classes="panelHeader" Text="GLIEDERUNG" />
+        <ListBox x:Name="OutlineList" Grid.Row="4" Background="#252526" DoubleTapped="OnOutlineDoubleTapped" FontSize="12" />
+      </Grid>
+      <GridSplitter x:Name="LeftSplitter" Grid.Column="1" Grid.Row="0" Grid.RowSpan="3" Background="#333337" ResizeDirection="Columns" />
+
+      <!-- Editor tabs -->
+      <Grid Grid.Column="2" Grid.Row="0">
+        <TabControl x:Name="Tabs" Padding="0" SelectionChanged="OnTabSelectionChanged" Background="#1E1E1E" />
+        <StackPanel x:Name="WelcomePanel" HorizontalAlignment="Center" VerticalAlignment="Center" Spacing="10">
+          <TextBlock Text="Eluna Workbench" FontSize="30" FontWeight="Light" HorizontalAlignment="Center" />
+          <TextBlock Text="Editor für Eluna Lua Engine &amp; AIO" Foreground="#9A9A9A" HorizontalAlignment="Center" />
+          <StackPanel Orientation="Horizontal" Spacing="10" HorizontalAlignment="Center" Margin="0,16,0,0">
+            <Button Content="Neues Projekt…" Click="OnNewProject" />
+            <Button Content="Projekt öffnen…" Click="OnOpenProject" />
+            <Button Content="Neue Datei" Click="OnNewFile" />
+          </StackPanel>
+          <ItemsControl x:Name="WelcomeRecent" Margin="0,16,0,0" HorizontalAlignment="Center" />
+        </StackPanel>
+      </Grid>
+
+      <GridSplitter x:Name="BottomSplitter" Grid.Column="2" Grid.Row="1" Background="#333337" ResizeDirection="Rows" />
+
+      <!-- Problems -->
+      <Grid x:Name="ProblemsPanel" Grid.Column="2" Grid.Row="2" RowDefinitions="Auto,*" Background="#252526">
+        <DockPanel Grid.Row="0">
+          <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" Spacing="8" Margin="0,0,8,0">
+            <ComboBox x:Name="ProblemScope" SelectedIndex="0" SelectionChanged="OnProblemFilterChanged" FontSize="12" MinHeight="26">
+              <ComboBoxItem Content="Aktuelle Datei" />
+              <ComboBoxItem Content="Ganzes Projekt" />
+            </ComboBox>
+            <CheckBox x:Name="ShowHints" Content="Hinweise" IsChecked="True" IsCheckedChanged="OnProblemFilterChanged" FontSize="12" />
+          </StackPanel>
+          <TextBlock x:Name="ProblemsHeader" Classes="panelHeader" Text="FEHLERLISTE" />
+        </DockPanel>
+        <ListBox x:Name="ProblemList" Grid.Row="1" Background="#1E1E1E" DoubleTapped="OnProblemDoubleTapped" FontSize="12">
+          <ListBox.ContextMenu>
+            <ContextMenu x:Name="ProblemContextMenu" Opening="OnProblemContextOpening" />
+          </ListBox.ContextMenu>
+        </ListBox>
+      </Grid>
+
+      <GridSplitter x:Name="RightSplitter" Grid.Column="3" Grid.Row="0" Grid.RowSpan="3" Background="#333337" ResizeDirection="Columns" />
+
+      <!-- API browser -->
+      <Grid x:Name="ApiPanel" Grid.Column="4" Grid.Row="0" Grid.RowSpan="3" RowDefinitions="Auto,Auto,*,4,220" Background="#252526">
+        <TextBlock Grid.Row="0" Classes="panelHeader" Text="API-BROWSER (Eluna · AIO · Lua)" />
+        <TextBox x:Name="ApiSearch" Grid.Row="1" Margin="6,0,6,6" Watermark="Suchen… (z. B. Teleport, ON_LOGIN, AIO)" TextChanged="OnApiSearchChanged" />
+        <TreeView x:Name="ApiTree" Grid.Row="2" Background="#252526" SelectionChanged="OnApiSelectionChanged" DoubleTapped="OnApiDoubleTapped" FontSize="12">
+          <TreeView.ItemTemplate>
+            <TreeDataTemplate x:DataType="local:ApiNode" ItemsSource="{Binding Children}">
+              <TextBlock Text="{Binding Label}" />
+            </TreeDataTemplate>
+          </TreeView.ItemTemplate>
+        </TreeView>
+        <GridSplitter Grid.Row="3" Background="#333337" ResizeDirection="Rows" />
+        <ScrollViewer Grid.Row="4" Background="#1E1E1E">
+          <SelectableTextBlock x:Name="ApiDoc" Margin="8" TextWrapping="Wrap" FontSize="12" FontFamily="Cascadia Mono,Consolas,DejaVu Sans Mono,monospace" />
+        </ScrollViewer>
+      </Grid>
+    </Grid>
+  </DockPanel>
+</Window>

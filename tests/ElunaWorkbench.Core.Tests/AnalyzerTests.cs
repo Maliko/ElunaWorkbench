@@ -84,6 +84,22 @@ public class AnalyzerTests
     }
 
     [Fact]
+    public void HandlerCalledInsteadOfPassed()
+    {
+        Assert.Single(Diags("local function OnLogin(e, p) end\nRegisterPlayerEvent(3, OnLogin())", "ELU003"));
+        Assert.Empty(Diags("local function OnLogin(e, p) end\nRegisterPlayerEvent(3, OnLogin)", "ELU003"));
+    }
+
+    [Fact]
+    public void UnknownLibraryMembersAreReported()
+    {
+        var d = Assert.Single(Diags("local n = string.lenn('x')\nprint(n)", "ELU005"));
+        Assert.Contains(d.Fixes, f => f.Title.Contains("'len'"));
+        var a = Assert.Single(Diags("local AIO = AIO or require('AIO')\nAIO.Hanlde(nil, 'a', 'b')", "ELU005"));
+        Assert.Contains(a.Fixes, f => f.Title.Contains("'Handle'"));
+    }
+
+    [Fact]
     public void ReturnTypesFlowThroughLocals()
     {
         var code = """

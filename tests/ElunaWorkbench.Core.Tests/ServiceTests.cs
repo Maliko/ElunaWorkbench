@@ -142,6 +142,15 @@ public class ServiceTests
     }
 
     [Fact]
+    public void FormatterIndentsInlineHandlersOnce()
+    {
+        var code = "RegisterPlayerEvent(3, function(event, player)\nplayer:SendBroadcastMessage(\"x\")\nlocal t = {\na = 1,\n}\nend)\nprint(1)";
+        var formatted = Formatter.Format(code);
+        Assert.Equal("RegisterPlayerEvent(3, function(event, player)\n    player:SendBroadcastMessage(\"x\")\n    local t = {\n        a = 1,\n    }\nend)\nprint(1)", formatted);
+        Assert.Equal(1, Formatter.IndentLevelAfter("RegisterPlayerEvent(3, function(event, player)\n"));
+    }
+
+    [Fact]
     public void SnippetExpand()
     {
         var (text, caret) = Snippets.Expand("if $0 then\n\tx\nend", "  ");

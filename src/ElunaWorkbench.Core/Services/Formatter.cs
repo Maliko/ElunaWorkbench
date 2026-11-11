@@ -73,20 +73,18 @@ public static class Formatter
         for (var l = 1; l <= lines.LineCount; l++)
         {
             var lineTokens = byLine.TryGetValue(l, out var lt) ? lt : new List<Token>();
-            // Leading closers dedent the line itself.
-            var leadingClose = 0;
+            // A line that starts with a closer (end, }, ), until, else, elseif) is dedented by one.
+            var startsWithCloser = lineTokens.Count > 0 && (IsCloser(lineTokens[0]) || lineTokens[0].IsKeyword("else"));
+            levels[l] = level - (startsWithCloser ? 1 : 0);
+            var delta = 0;
             foreach (var t in lineTokens)
             {
-                if (IsCloser(t) || t.IsKeyword("else") || t.IsKeyword("elseif")) leadingClose++;
-                else break;
-                if (t.IsKeyword("else") || t.IsKeyword("elseif")) break;
+                if (IsOpener(t)) delta++;
+                else if (IsCloser(t) && !t.IsKeyword("else")) delta--;
             }
-            levels[l] = level - leadingClose;
-            foreach (var t in lineTokens)
-            {
-                if (IsOpener(t)) level++;
-                else if (IsCloser(t) && !t.IsKeyword("else")) level--;
-            }
+            // Lua style: several constructs opened on one line (e.g. "Register(1, function()")
+            // indent the following lines by a single level only.
+            level += Math.Clamp(delta, -1, 1);
             if (level < 0) level = 0;
         }
         finalLevel = level;

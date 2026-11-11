@@ -21,6 +21,9 @@ public sealed class ApiDatabase
 
     public static ApiDatabase Default => _default.Value;
 
+    /// <summary>Class name used for AIO messages (AIO.Msg()).</summary>
+    public const string AioMessageClass = BuiltinApi.AioMessageClass;
+
     public IReadOnlyList<string> Cores { get; private set; } = Array.Empty<string>();
     public IEnumerable<ApiClass> Classes => _classes.Values;
     public IEnumerable<ApiFunction> Globals => _globals.Values;

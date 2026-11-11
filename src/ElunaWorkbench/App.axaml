@@ -1,0 +1,22 @@
+<Application xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             x:Class="ElunaWorkbench.App"
+             RequestedThemeVariant="Dark">
+  <Application.Styles>
+    <FluentTheme />
+    <StyleInclude Source="avares://AvaloniaEdit/Themes/Fluent/AvaloniaEdit.xaml" />
+    <Style Selector="TreeViewItem">
+      <Setter Property="MinHeight" Value="24" />
+    </Style>
+    <Style Selector="TabItem">
+      <Setter Property="FontSize" Value="13" />
+      <Setter Property="MinHeight" Value="30" />
+      <Setter Property="Padding" Value="10,2" />
+    </Style>
+    <Style Selector="TextBlock.panelHeader">
+      <Setter Property="FontWeight" Value="SemiBold" />
+      <Setter Property="Margin" Value="8,6" />
+      <Setter Property="Foreground" Value="#C8C8C8" />
+    </Style>
+  </Application.Styles>
+</Application>

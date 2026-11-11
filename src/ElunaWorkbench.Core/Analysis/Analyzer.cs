@@ -236,7 +236,6 @@ public sealed class Analyzer
 
     private void BindFunctionTarget(FunctionStmt fs, Scope scope)
     {
-        var display = fs.Function.DisplayName ?? "";
         if (fs.Target is NameExpr n && fs.MethodName == null)
         {
             var sym = scope.Lookup(n.Name, n.Start);
@@ -282,7 +281,6 @@ public sealed class Analyzer
             fi.Function = fs.Function;
             fi.Type = "function";
         }
-        _ = display;
     }
 
     /// <summary>Returns the (mutable) field table that represents the value of the expression.</summary>
@@ -775,7 +773,6 @@ public sealed class Analyzer
                 foreach (var cl in i.Clauses)
                 {
                     CheckExpr(cl.Condition);
-                    CheckAssignmentInCondition(cl.Condition);
                     CheckBlock(cl.Body);
                 }
                 if (i.Else != null) CheckBlock(i.Else);
@@ -795,11 +792,6 @@ public sealed class Analyzer
                 foreach (var v in rs.Values) CheckExpr(v);
                 break;
         }
-    }
-
-    private void CheckAssignmentInCondition(Expr cond)
-    {
-        // nothing: "if a = b" is already a syntax error in the parser.
     }
 
     private void InferGenericForTypes(GenericForStmt gf)
@@ -1138,7 +1130,7 @@ public sealed class Analyzer
             {
                 Diag(DiagnosticSeverity.Error, "ELU003", $"{registerName} erwartet als Handler eine Funktion.", h);
             }
-            else if (h is CallExpr inner && TypeOf(inner) is { } t && t != "function")
+            else if (h is CallExpr inner && (TypeOf(inner) is { } t && t != "function" || ResolveFunction(inner.Callee) != null))
             {
                 Diag(DiagnosticSeverity.Warning, "ELU003",
                     $"Der Handler wird hier aufgerufen statt übergeben – übergeben Sie die Funktion ohne '()'.", h);

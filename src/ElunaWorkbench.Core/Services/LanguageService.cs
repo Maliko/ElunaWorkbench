@@ -87,7 +87,8 @@ public static class LanguageService
             .Where(i => TextUtil.FuzzyMatch(i.Label, prefix))
             .GroupBy(i => (i.Label, i.Kind == CompletionKind.Snippet))
             .Select(g => g.OrderBy(i => i.Priority).First())
-            .OrderBy(i => i.Label.StartsWith(prefix, StringComparison.Ordinal) ? 0 : i.Label.StartsWith(prefix, StringComparison.OrdinalIgnoreCase) ? 1 : 2)
+            .OrderBy(i => i.Kind == CompletionKind.Event && i.Priority < 0 ? -1 : 0)
+            .ThenBy(i => i.Label.StartsWith(prefix, StringComparison.Ordinal) ? 0 : i.Label.StartsWith(prefix, StringComparison.OrdinalIgnoreCase) ? 1 : 2)
             .ThenBy(i => i.Priority)
             .ThenBy(i => i.Label, StringComparer.OrdinalIgnoreCase)
             .ToList();
@@ -495,7 +496,7 @@ public static class LanguageService
                         Detail = $"function({e.ParameterList})",
                         Documentation = $"{e.Name} = {e.Id}\nState: {e.State}\nHandler: function({string.Join(", ", e.Params.Select(p => $"{p.Name}: {p.Type}"))})" +
                                         (string.IsNullOrWhiteSpace(e.Comment) ? "" : "\n" + e.Comment),
-                        Priority = 0,
+                        Priority = -1000 + e.Id,
                     });
                 }
             }

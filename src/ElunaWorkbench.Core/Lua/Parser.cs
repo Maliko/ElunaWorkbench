@@ -211,12 +211,10 @@ public sealed class Parser
             var openLine = _lines.GetPosition(open.Start).Line;
             var closeLine = _lines.GetPosition(close.Value.Start).Line;
             if (openLine == closeLine) continue;
-            if (GetIndent(closeLine).Length < GetIndent(openLine).Length) return OpenerKeyword(open);
+            if (GetIndent(closeLine).Length < GetIndent(openLine).Length) return open;
         }
         return null;
     }
-
-    private Token OpenerKeyword(Token t) => t;
 
     private int FindEndInsertionPoint(Token opener)
     {
@@ -288,7 +286,7 @@ public sealed class Parser
                 block.Statements.Add(ParseReturn());
                 if (!IsBlockEnd())
                 {
-                    var d = Error($"Nach 'return' muss der Block enden ('end' erwartet), gefunden: {Describe(Current)}.", Current, "LUA104");
+                    Error($"Nach 'return' muss der Block enden ('end' erwartet), gefunden: {Describe(Current)}.", Current, "LUA104");
                     continue;
                 }
                 break;
@@ -627,7 +625,7 @@ public sealed class Parser
             stmt.End = Previous.End;
             return stmt;
         }
-        if (CheckOp("++") || (CheckOp("-") && PeekToken().IsOp("-") && PeekToken().Start == Current.End))
+        if (CheckOp("++"))
         {
             var op = Advance();
             var targetText = _text.Substring(expr.Start, expr.End - expr.Start);
